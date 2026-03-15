@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -21,7 +20,6 @@ func main() {
 	server.Use(middleware.RequestID())
 
 	server.Router().Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("request id: ", middleware.RequestIDFromContext(r.Context()))
 		WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
