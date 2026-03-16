@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"math/rand/v2"
 	"net/http"
 	"time"
 
 	"github.com/dwikynator/minato"
+	"github.com/dwikynator/minato/health"
 	"github.com/dwikynator/minato/middleware"
 )
 
@@ -16,6 +20,8 @@ func main() {
 		minato.WithReadHeaderTimeout(5*time.Second),
 		minato.WithIdleTimeout(10*time.Second),
 		minato.WithShutdownTimeout(5*time.Second),
+
+		minato.WithReadinessCheck("postgres", checkFakeDB),
 	)
 
 	// 2. Register Global Middleware (Order matters!)
@@ -35,6 +41,15 @@ func main() {
 	))
 
 	// 3. Register Routes
+
+	// Health Endpoints
+	server.Router().Get("/healthz", health.Liveness())
+
+	// Manually passing our checks map for now
+	checks := map[string]health.CheckFunc{
+		"postgres": checkFakeDB,
+	}
+	server.Router().Get("/readyz", health.Readiness(checks))
 
 	// Standard GET route
 	server.Router().Get("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -71,4 +86,13 @@ func WriteJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
+}
+
+// checkFakeDB simulates a database connection that randomly fails 30% of the time
+func checkFakeDB(ctx context.Context) error {
+	time.Sleep(20 * time.Millisecond) // Simulate network latency
+	if rand.Float32() < 0.3 {
+		return errors.New("connection timeout")
+	}
+	return nil
 }
