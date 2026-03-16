@@ -27,6 +27,12 @@ func main() {
 	server.Use(middleware.Logger(
 		middleware.WithBodyLogging(true), // Enable body loggin for testing
 	))
+	// d. CORS goes fourth to handle OPTIONS preflights and injects headers.
+	server.Use(middleware.CORS(
+		middleware.WithAllowedOrigins("https://example.com"),
+		middleware.WithAllowedMethods("GET", "POST", "OPTIONS"),
+		middleware.WithAllowedHeaders("Content-Type", "Authorization", "X-Request-ID"),
+	))
 
 	// 3. Register Routes
 
