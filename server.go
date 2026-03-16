@@ -1,3 +1,5 @@
+// Package minato provides an opinionated, fast, and feature-rich HTTP server
+// framework built on top of standard library net/http and chi.
 package minato
 
 import (
@@ -12,12 +14,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// Server represents the Minato HTTP server instance, wrapping an internal http.Server and Router
 type Server struct {
 	config  *config
 	router  *Router
 	httpSrv *http.Server
 }
 
+// New creates a new Minato Server instance with the provided options.
 func New(opts ...Option) *Server {
 	cfg := defaultConfig()
 
@@ -40,14 +44,18 @@ func New(opts ...Option) *Server {
 	}
 }
 
+// Use registers global middleware that will be applied to all routes.
 func (s *Server) Use(middlewares ...func(http.Handler) http.Handler) {
 	s.router.Use(middlewares...)
 }
 
+// Router returns the underlying Minato Router for registering routes.
 func (s *Server) Router() *Router {
 	return s.router
 }
 
+// Run starts the HTTP server, handles graceful shutdown on SIGINT and SIGTERM,
+// and executes any registered closers before exiting.
 func (s *Server) Run() error {
 	s.httpSrv.Handler = s.router
 

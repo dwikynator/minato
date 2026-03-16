@@ -21,7 +21,7 @@ func Liveness() http.HandlerFunc {
 	}
 }
 
-// Rediness returns an http.HandlerFunc for GET /readyz
+// Readiness returns an http.HandlerFunc for GET /readyz
 // It runs all registered checks concurrently
 // Returns 200 if all pass, 503 if any fail
 func Readiness(checks map[string]CheckFunc) http.HandlerFunc {
