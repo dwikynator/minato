@@ -5,7 +5,6 @@ package minato
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -75,7 +74,7 @@ func (s *Server) Run() error {
 		s.router.Get("/metrics", promhttp.Handler().ServeHTTP)
 	}
 
-	slog.Info("minato:server starting", "addr", s.config.addr)
+	s.config.logger.Info("minato:server starting", "addr", s.config.addr)
 
 	serverErr := make(chan error, 1)
 
@@ -103,7 +102,7 @@ func (s *Server) Run() error {
 	closers := s.config.closers
 	for i := len(closers) - 1; i >= 0; i-- {
 		if err := closers[i].fn(); err != nil {
-			slog.Error("error shutting down dependency", "name", closers[i].name, "error", err)
+			s.config.logger.Error("error shutting down dependency", "name", closers[i].name, "error", err)
 		}
 	}
 

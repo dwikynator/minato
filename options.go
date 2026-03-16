@@ -14,6 +14,7 @@ type config struct {
 	metrics           bool
 	readinessChecks   []namedCheck
 	closers           []namedCloser
+	logger            Logger
 }
 
 type namedCheck struct {
@@ -37,6 +38,7 @@ func defaultConfig() *config {
 		idleTimeout:       60 * time.Second,
 		healthCheck:       false,
 		metrics:           false,
+		logger:            &defaultLogger{},
 	}
 }
 
@@ -98,5 +100,13 @@ func WithReadinessCheck(name string, fn func(ctx context.Context) error) Option 
 func WithCloser(name string, fn func() error) Option {
 	return func(c *config) {
 		c.closers = append(c.closers, namedCloser{name: name, fn: fn})
+	}
+}
+
+// WithLogger allows injecting a custom Logger implementation for the server.
+// If not provided, it defaults to standard log/slog.
+func WithLogger(l Logger) Option {
+	return func(c *config) {
+		c.logger = l
 	}
 }
