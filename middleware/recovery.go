@@ -2,12 +2,31 @@ package middleware
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"runtime/debug"
 )
 
-func Recovery() func(http.Handler) http.Handler {
+type recoveryConfig struct {
+	printer LogPrinter
+}
+
+type RecoveryOption func(*recoveryConfig)
+
+// WithRecoveryPrinter allows injecting a custom logger for panic reporting.
+func WithRecoveryPrinter(p LogPrinter) RecoveryOption {
+	return func(c *recoveryConfig) {
+		c.printer = p
+	}
+}
+
+func Recovery(opts ...RecoveryOption) func(http.Handler) http.Handler {
+	cfg := &recoveryConfig{
+		printer: &defaultLogPrinter{},
+	}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -20,10 +39,10 @@ func Recovery() func(http.Handler) http.Handler {
 					// 3. Log the panic!
 					// We want to log the error itself AND the stack trace
 					// so we can debug what crashed
-					slog.Error("panic recovered",
-						slog.Any("err", err),
-						slog.String("stack", string(debug.Stack())),
-						slog.String("request_id", RequestIDFromContext(r.Context())),
+					cfg.printer.Error("panic recovered",
+						"err", err,
+						"stack", string(debug.Stack()),
+						"request_id", RequestIDFromContext(r.Context()),
 					)
 
 					// 4. Return a clean 500 JSON response to the user

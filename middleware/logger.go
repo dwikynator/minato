@@ -8,6 +8,17 @@ import (
 	"time"
 )
 
+// LogPrinter defines the logging methods required by middlewares.
+type LogPrinter interface {
+	Info(msg string, args ...any)
+	Error(msg string, args ...any)
+}
+
+type defaultLogPrinter struct{}
+
+func (l *defaultLogPrinter) Info(msg string, args ...any)  { slog.Info(msg, args...) }
+func (l *defaultLogPrinter) Error(msg string, args ...any) { slog.Error(msg, args...) }
+
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -28,6 +39,7 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 
 type loggerConfig struct {
 	bodyLogging bool
+	printer     LogPrinter
 }
 
 type LoggerOption func(*loggerConfig)
@@ -38,9 +50,17 @@ func WithBodyLogging(enabled bool) LoggerOption {
 	}
 }
 
+// WithLogPrinter allows injecting a custom logger into the middleware.
+func WithLogPrinter(p LogPrinter) LoggerOption {
+	return func(c *loggerConfig) {
+		c.printer = p
+	}
+}
+
 func Logger(opts ...LoggerOption) func(http.Handler) http.Handler {
 	cfg := &loggerConfig{
 		bodyLogging: false,
+		printer:     &defaultLogPrinter{},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -69,20 +89,21 @@ func Logger(opts ...LoggerOption) func(http.Handler) http.Handler {
 			duration := time.Since(start)
 
 			logArgs := []any{
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
-				slog.Int("status", rw.statusCode),
-				slog.String("duration", duration.String()),
-				slog.String("request_id", RequestIDFromContext(r.Context())),
+				"method", r.Method,
+				"path", r.URL.Path,
+				"status", rw.statusCode,
+				"duration", duration.String(),
+				"request_id", RequestIDFromContext(r.Context()),
 			}
 
 			if cfg.bodyLogging {
-				logArgs = append(logArgs, slog.String("req_body", string(reqBody)),
-					slog.String("res_body", rw.body.String()),
+				logArgs = append(logArgs,
+					"req_body", string(reqBody),
+					"res_body", rw.body.String(),
 				)
 			}
 
-			slog.Info("request", logArgs...)
+			cfg.printer.Info("request", logArgs...)
 		})
 	}
 }
