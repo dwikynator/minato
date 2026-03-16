@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os/signal"
 	"syscall"
+
+	"github.com/dwikynator/minato/health"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Server struct {
@@ -48,8 +51,21 @@ func (s *Server) Router() *Router {
 func (s *Server) Run() error {
 	s.httpSrv.Handler = s.router
 
-	// TODO: register /healthz, /readyz, and /metrics routes here
-	// based on s.config.healthCheck and s.config.metrics
+	if s.config.healthCheck {
+		// Convert slice of named checks into a map for the readiness handler
+		checks := make(map[string]health.CheckFunc)
+		for _, nc := range s.config.readinessChecks {
+			checks[nc.name] = nc.fn
+		}
+		s.router.Get("/healthz", health.Liveness())
+		s.router.Get("/readyz", health.Readiness(checks))
+	}
+
+	if s.config.metrics {
+		// promphttp.Handler() returns a standard http.Handler that
+		// exposes Go runtime metrics and any custom metrics registered
+		s.router.Get("/metrics", promhttp.Handler().ServeHTTP)
+	}
 
 	log.Printf("minato: server listening on %s\n", s.config.addr)
 

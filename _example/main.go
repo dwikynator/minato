@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dwikynator/minato"
-	"github.com/dwikynator/minato/health"
 	"github.com/dwikynator/minato/middleware"
 )
 
@@ -20,7 +19,8 @@ func main() {
 		minato.WithReadHeaderTimeout(5*time.Second),
 		minato.WithIdleTimeout(10*time.Second),
 		minato.WithShutdownTimeout(5*time.Second),
-
+		minato.WithHealthCheck(),
+		minato.WithMetrics(),
 		minato.WithReadinessCheck("postgres", checkFakeDB),
 	)
 
@@ -31,7 +31,7 @@ func main() {
 	server.Use(middleware.Recovery())
 	// c. Logger goes third to time the handlers and log the results
 	server.Use(middleware.Logger(
-		middleware.WithBodyLogging(true), // Enable body loggin for testing
+		middleware.WithBodyLogging(true), // Enable body logging for testing
 	))
 	// d. CORS goes fourth to handle OPTIONS preflights and injects headers.
 	server.Use(middleware.CORS(
@@ -41,15 +41,6 @@ func main() {
 	))
 
 	// 3. Register Routes
-
-	// Health Endpoints
-	server.Router().Get("/healthz", health.Liveness())
-
-	// Manually passing our checks map for now
-	checks := map[string]health.CheckFunc{
-		"postgres": checkFakeDB,
-	}
-	server.Router().Get("/readyz", health.Readiness(checks))
 
 	// Standard GET route
 	server.Router().Get("/ping", func(w http.ResponseWriter, r *http.Request) {
