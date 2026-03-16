@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand/v2"
 	"net/http"
 	"time"
@@ -22,6 +23,10 @@ func main() {
 		minato.WithHealthCheck(),
 		minato.WithMetrics(),
 		minato.WithReadinessCheck("postgres", checkFakeDB),
+		minato.WithCloser("fake-db", func() error {
+			fmt.Println("closing fake-db connection")
+			return nil
+		}),
 	)
 
 	// 2. Register Global Middleware (Order matters!)
@@ -67,6 +72,14 @@ func main() {
 	server.Router().Get("/panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("Oops! Something went terribly wrong here.")
 	})
+
+	// Route group to demonstrate nested routing
+	server.Router().Group("/api/v1", func(r *minato.Router) {
+		r.Get("/users", func(w http.ResponseWriter, req *http.Request) {
+			WriteJSON(w, http.StatusOK, []string{"alice", "bob", "charlie"})
+		})
+	})
+
 	// 4. Start the server (blocks until SIGINT/SIGTERM)
 	if err := server.Run(); err != nil {
 		panic(err)
