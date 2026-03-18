@@ -287,3 +287,5 @@ $RECYCLE.BIN/
 
 # gRPC Mode - Large Proto Dependencies
 _example/grpc/third_party/
+_example/grpc/proto/third_party/
+_example/grpc/grpc/
