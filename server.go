@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 // Server represents the Minato HTTP server instance, wrapping an internal http.Server and Router
@@ -164,6 +165,10 @@ func (s *Server) runGRPCMode() error {
 	// 2. Register gRPC service implementation
 	for _, fn := range s.config.grpcServices {
 		fn(grpcSrv)
+	}
+
+	if s.config.grpcReflection {
+		reflection.Register(grpcSrv)
 	}
 
 	// 3. Build the grpc-gateway HTTP mux (self-dials grpcAddr on loopback)

@@ -2,10 +2,15 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/dwikynator/minato"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 // LogPrinter defines the logging methods required by middlewares.
@@ -16,7 +21,10 @@ type LogPrinter interface {
 
 type defaultLogPrinter struct{}
 
-func (l *defaultLogPrinter) Info(msg string, args ...any)  { slog.Info(msg, args...) }
+// Info logs an info message using slog.
+func (l *defaultLogPrinter) Info(msg string, args ...any) { slog.Info(msg, args...) }
+
+// Error logs an error message using slog.
 func (l *defaultLogPrinter) Error(msg string, args ...any) { slog.Error(msg, args...) }
 
 type responseWriter struct {
@@ -25,11 +33,13 @@ type responseWriter struct {
 	body       *bytes.Buffer
 }
 
+// WriteHeader captures the status code before writing it to the underlying ResponseWriter.
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
 }
 
+// Write captures the response body before writing it to the underlying ResponseWriter.
 func (rw *responseWriter) Write(b []byte) (int, error) {
 	if rw.body != nil {
 		rw.body.Write(b)
@@ -44,6 +54,7 @@ type loggerConfig struct {
 
 type LoggerOption func(*loggerConfig)
 
+// WithBodyLogging enables logging of request and response bodies.
 func WithBodyLogging(enabled bool) LoggerOption {
 	return func(c *loggerConfig) {
 		c.bodyLogging = enabled
@@ -57,6 +68,7 @@ func WithLogPrinter(p LogPrinter) LoggerOption {
 	}
 }
 
+// Logger returns a middleware that logs requests.
 func Logger(opts ...LoggerOption) func(http.Handler) http.Handler {
 	cfg := &loggerConfig{
 		bodyLogging: false,
@@ -88,22 +100,59 @@ func Logger(opts ...LoggerOption) func(http.Handler) http.Handler {
 			next.ServeHTTP(rw, r)
 			duration := time.Since(start)
 
-			logArgs := []any{
-				"method", r.Method,
-				"path", r.URL.Path,
-				"status", rw.statusCode,
-				"duration", duration.String(),
-				"request_id", RequestIDFromContext(r.Context()),
-			}
-
+			extra := []any{}
 			if cfg.bodyLogging {
-				logArgs = append(logArgs,
+				extra = append(extra,
 					"req_body", string(reqBody),
 					"res_body", rw.body.String(),
 				)
 			}
 
-			cfg.printer.Info("request", logArgs...)
+			logEntry(
+				cfg.printer,
+				r.Method,
+				r.URL.Path,
+				rw.statusCode,
+				duration,
+				RequestIDFromContext(r.Context()),
+				extra...,
+			)
 		})
+	}
+}
+
+// logEntry is the shared core logic called by both the HTTP and gRPC forms.
+func logEntry(p LogPrinter, method, path string, statusCode int, duration time.Duration, requestID string, extra ...any) {
+	args := []any{
+		"method", method,
+		"path", path,
+		"status", statusCode,
+		"duration", duration.String(),
+		"request_id", requestID,
+	}
+	args = append(args, extra...)
+	p.Info("request", args...)
+}
+
+// LoggerInterceptor is the gRPC unary interceptor form of Logger.
+func LoggerInterceptor(opts ...LoggerOption) grpc.UnaryServerInterceptor {
+	cfg := &loggerConfig{printer: &defaultLogPrinter{}}
+	for _, o := range opts {
+		o(cfg)
+	}
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		start := time.Now()
+		resp, err := handler(ctx, req)
+		code := int(status.Code(err)) // grpc status code as int
+		logEntry(cfg.printer, "gRPC", info.FullMethod, code, time.Since(start), RequestIDFromContext(ctx))
+		return resp, err
+	}
+}
+
+// LoggerPlugin bundles Logger (HTTP) and LoggerInterceptor (gRPC).
+func LoggerPlugin(opts ...LoggerOption) minato.Plugin {
+	return minato.Plugin{
+		HTTP: Logger(opts...),
+		GRPC: LoggerInterceptor(opts...),
 	}
 }

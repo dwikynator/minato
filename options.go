@@ -27,6 +27,7 @@ type config struct {
 	grpcStreamInts []grpc.StreamServerInterceptor
 	gatewayRegFns  []GatewayRegisterFunc
 	gatewayMuxOpts []runtime.ServeMuxOption
+	grpcReflection bool
 }
 
 type namedCheck struct {
@@ -168,5 +169,13 @@ func WithGRPCStreamInterceptor(interceptors ...grpc.StreamServerInterceptor) Opt
 func WithGatewayMuxOptions(opts ...runtime.ServeMuxOption) Option {
 	return func(c *config) {
 		c.gatewayMuxOpts = append(c.gatewayMuxOpts, opts...)
+	}
+}
+
+// WithGRPCReflection enables gRPC server reflection.
+// Keep disabled by default and enable only when needed.
+func WithGRPCReflection() Option {
+	return func(c *config) {
+		c.grpcReflection = true
 	}
 }

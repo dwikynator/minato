@@ -1,9 +1,15 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/dwikynator/minato"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type recoveryConfig struct {
@@ -60,5 +66,35 @@ func Recovery(opts ...RecoveryOption) func(http.Handler) http.Handler {
 			// If this panics, the defer above will catch it
 			next.ServeHTTP(w, r)
 		})
+	}
+}
+
+// RecoverInterceptor is the gRPC unary interceptor form of recovery.
+func RecoveryInterceptor(opts ...RecoveryOption) grpc.UnaryServerInterceptor {
+	cfg := &recoveryConfig{printer: &defaultLogPrinter{}}
+	for _, o := range opts {
+		o(cfg)
+	}
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				cfg.printer.Error("panic recovered",
+					"err", r,
+					"stack", string(debug.Stack()),
+					"request_id", RequestIDFromContext(ctx),
+				)
+				err = status.Errorf(codes.Internal, "internal server error")
+			}
+		}()
+		resp, err = handler(ctx, req)
+		return resp, err
+	}
+}
+
+// RecoveryPlugin bundles Recovery (HTTP) and RecoveryInterceptor (gRPC).
+func RecoveryPlugin(opts ...RecoveryOption) minato.Plugin {
+	return minato.Plugin{
+		HTTP: Recovery(opts...),
+		GRPC: RecoveryInterceptor(opts...),
 	}
 }
