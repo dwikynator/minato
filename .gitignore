@@ -284,3 +284,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# gRPC Mode - Large Proto Dependencies
+_example/grpc/third_party/
+_example/grpc/proto/third_party/
+_example/grpc/grpc/

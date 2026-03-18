@@ -59,3 +59,9 @@ func (r *Router) Group(pattern string, fn func(r *Router)) {
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.mux.ServeHTTP(w, req)
 }
+
+// Mount attaches an http.Handler at the given pattern prefix.
+// Used internally by gRPC mode to mount the grpc-gateway ServeMux
+func (r *Router) Mount(pattern string, h http.Handler) {
+	r.mux.Mount(pattern, h)
+}
