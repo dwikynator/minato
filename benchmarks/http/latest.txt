@@ -1,0 +1,90 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/dwikynator/minato
+cpu: Apple M1 Pro
+BenchmarkHTTP/Baseline/chi/static-10         	  654422	      1895 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  642720	      1913 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  650089	      1858 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  648823	      1841 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  658408	      1841 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  662127	      1842 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  654046	      1834 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  656930	      1859 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  642382	      1862 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Baseline/chi/static-10         	  639423	      1858 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  645783	      1846 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  635089	      1836 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  624120	      1867 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  648646	      1842 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  691336	      1837 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  674140	      1838 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  666516	      1867 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  662325	      1873 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  656856	      1851 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/bare/static-10          	  656893	      1958 ns/op	    6503 B/op	      21 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  399054	      3091 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  405441	      2890 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  426004	      2894 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  391393	      2884 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  420142	      2866 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  431612	      2903 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  420699	      2933 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  422322	      2901 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  370518	      2932 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-missing-10         	  423452	      2902 ns/op	    7309 B/op	      37 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  458714	      3206 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  420301	      2710 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  436074	      2742 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  466790	      2669 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  457924	      2675 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  446635	      2677 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  445153	      2672 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  447360	      2699 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  446850	      2678 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Minato/stacked/static/request-id-present-10         	  456802	      2679 ns/op	    7630 B/op	      38 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  599858	      2045 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  585412	      2075 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  581202	      2036 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  596163	      2044 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  589660	      2025 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  581247	      2060 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  607335	      2153 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  575198	      2043 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  609183	      2041 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Baseline/chi/param-10                               	  575290	      2073 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  594273	      2043 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  590554	      2037 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  603512	      2049 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  578467	      2033 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  619806	      2038 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  583089	      2054 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  593982	      2036 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  597218	      2033 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  592856	      2042 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/bare/param-10                                	  590804	      2039 ns/op	    6864 B/op	      23 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  389578	      3049 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  390817	      3048 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  394318	      3085 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  396970	      3047 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  385639	      3057 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  390703	      3046 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  389241	      3098 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  393885	      3108 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  379077	      3128 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-missing-10          	  312788	      3536 ns/op	    7670 B/op	      39 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  366534	      3150 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  406053	      3007 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  398719	      2903 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  417855	      2883 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  417844	      2886 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  427852	      2890 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  423903	      2885 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  373578	      2965 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  371690	      3353 ns/op	    7990 B/op	      40 allocs/op
+BenchmarkHTTP/Minato/stacked/param/request-id-present-10          	  384819	      3157 ns/op	    7990 B/op	      40 allocs/op
+PASS
+ok  	github.com/dwikynator/minato	99.975s
+PASS
+ok  	github.com/dwikynator/minato/health	0.410s
+PASS
+ok  	github.com/dwikynator/minato/middleware	0.301s

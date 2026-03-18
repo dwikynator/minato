@@ -1,5 +1,8 @@
-// Package minato provides an opinionated, fast, and feature-rich HTTP server
-// framework built on top of standard library net/http and chi.
+// Package minato provides an opinionated, feature-rich Go server framework for
+// building production-ready HTTP and gRPC-gateway microservices with minimal
+// boilerplate. It is built on top of standard library net/http and chi, with
+// lightweight core routing and additional overhead only when optional
+// middleware is enabled.
 package minato
 
 import (
