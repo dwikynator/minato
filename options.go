@@ -2,7 +2,11 @@ package minato
 
 import (
 	"context"
+	"net/http"
 	"time"
+
+	runtime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc"
 )
 
 type config struct {
@@ -15,6 +19,14 @@ type config struct {
 	readinessChecks   []namedCheck
 	closers           []namedCloser
 	logger            Logger
+
+	// gRPC mode - zero values mean gRPC mode is disabled.
+	grpcAddr       string
+	grpcServices   []GRPCServiceFunc
+	grpcUnaryInts  []grpc.UnaryServerInterceptor
+	grpcStreamInts []grpc.StreamServerInterceptor
+	gatewayRegFns  []GatewayRegisterFunc
+	gatewayMuxOpts []runtime.ServeMuxOption
 }
 
 type namedCheck struct {
@@ -26,6 +38,26 @@ type namedCloser struct {
 	name string
 	fn   func() error
 }
+
+// Plugin bundles the HTTP middleware form and the gRPC unary interceptor form
+// of the same cross-cutting concern into a single registerable unit.
+type Plugin struct {
+	HTTP func(http.Handler) http.Handler
+	GRPC grpc.UnaryServerInterceptor
+}
+
+// GRPCServiceFunc is a callback that registers a gRPC service implementation
+// against the server's grpc.ServiceRegistrar.
+type GRPCServiceFunc func(s grpc.ServiceRegistrar)
+
+// GatewayRegisterFunc is a callback that registers a gRPC gateway handler
+// produced by protoc-gen-grpc-gateway.
+type GatewayRegisterFunc func(
+	ctx context.Context,
+	mux *runtime.ServeMux,
+	endpoint string,
+	opts []grpc.DialOption,
+) error
 
 // Option defines a functional configuration option for the Minato Server.
 type Option func(*config)
@@ -108,5 +140,33 @@ func WithCloser(name string, fn func() error) Option {
 func WithLogger(l Logger) Option {
 	return func(c *config) {
 		c.logger = l
+	}
+}
+
+// WithGRPCAddr sets the TCP address for the gRPC server and enables gRPC mode.
+func WithGRPCAddr(addr string) Option {
+	return func(c *config) {
+		c.grpcAddr = addr
+	}
+}
+
+// WithGRPCUnaryInterceptor appends one or more unary interceptors to the gRPC server.
+func WithGRPCUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
+	return func(c *config) {
+		c.grpcUnaryInts = append(c.grpcUnaryInts, interceptors...)
+	}
+}
+
+// WithGRPCStreamInterceptor appends one or more stream interceptors to the gRPC server.
+func WithGRPCStreamInterceptor(interceptors ...grpc.StreamServerInterceptor) Option {
+	return func(c *config) {
+		c.grpcStreamInts = append(c.grpcStreamInts, interceptors...)
+	}
+}
+
+// WithGatewayMuxOptions forwards options directly to runtime.NewServeMux.
+func WithGatewayMuxOptions(opts ...runtime.ServeMuxOption) Option {
+	return func(c *config) {
+		c.gatewayMuxOpts = append(c.gatewayMuxOpts, opts...)
 	}
 }
