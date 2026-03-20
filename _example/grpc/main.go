@@ -15,6 +15,7 @@ func main() {
 		minato.WithAddr(":8080"),
 		minato.WithGRPCAddr(":9090"),
 		minato.WithGRPCReflection(), // optional, useful for grpcurl/dev tooling
+		minato.WithHealthCheck(),
 	)
 
 	server.UsePlugin(
