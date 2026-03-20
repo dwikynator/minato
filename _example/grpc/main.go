@@ -6,6 +6,7 @@ import (
 	"github.com/dwikynator/minato"
 	greeterpb "github.com/dwikynator/minato/_example/grpc/grpc/greeter/v1"
 	"github.com/dwikynator/minato/_example/grpc/handler"
+	"github.com/dwikynator/minato/merr"
 	"github.com/dwikynator/minato/middleware"
 	"google.golang.org/grpc"
 )
@@ -14,8 +15,8 @@ func main() {
 	server := minato.New(
 		minato.WithAddr(":8080"),
 		minato.WithGRPCAddr(":9090"),
-		minato.WithGRPCReflection(), // optional, useful for grpcurl/dev tooling
-		minato.WithHealthCheck(),
+		minato.WithGRPCReflection(),
+		minato.WithGatewayMuxOptions(merr.WithGatewayErrorHandler()),
 	)
 
 	server.UsePlugin(
