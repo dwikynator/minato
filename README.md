@@ -51,8 +51,8 @@ func main() {
 	)
 
 	// 2. Register Global Middleware
-	server.Use(middleware.RequestID())
 	server.Use(middleware.Recovery())
+	server.Use(middleware.RequestID())
 	server.Use(middleware.Logger(
 		middleware.WithBodyLogging(true),
 	))
@@ -103,10 +103,14 @@ func main() {
 		minato.WithGRPCReflection(),  // optional; useful for grpcurl/dev tooling
 	)
 
+	// IMPORTANT: RecoveryPlugin MUST be registered first via UsePlugin.
+	// Plugins are appended in order, and grpc-go executes interceptors
+	// in registration order (first registered = outermost wrapper).
+	// Recovery must be outermost to catch panics from ALL inner interceptors.
 	server.UsePlugin(
+		middleware.RecoveryPlugin(),
 		middleware.RequestIDPlugin(),
 		middleware.LoggerPlugin(),
-		middleware.RecoveryPlugin(),
 	)
 	server.Use(middleware.CORS()) // HTTP-only middleware
 

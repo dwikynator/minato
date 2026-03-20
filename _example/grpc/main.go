@@ -19,10 +19,14 @@ func main() {
 		minato.WithGatewayMuxOptions(merr.WithGatewayErrorHandler()),
 	)
 
+	// IMPORTANT: RecoveryPlugin MUST be registered first via UsePlugin.
+	// Plugins are appended in order, and grpc-go executes interceptors
+	// in registration order (first registered = outermost wrapper).
+	// Recovery must be outermost to catch panics from ALL inner interceptors.
 	server.UsePlugin(
+		middleware.RecoveryPlugin(),
 		middleware.RequestIDPlugin(),
 		middleware.LoggerPlugin(),
-		middleware.RecoveryPlugin(),
 	)
 
 	server.Use(middleware.CORS())
