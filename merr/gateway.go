@@ -11,28 +11,25 @@ import (
 	runtime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 )
 
-// gatewayErrorBody is the JSON structure written by GatewayErrorHandler.
 type gatewayErrorBody struct {
 	Error gatewayErrorDetail `json:"error"`
 }
 
 type gatewayErrorDetail struct {
-	Code    string            `json:"code"`
-	Message string            `json:"message"`
-	Details map[string]string `json:"details,omitempty"`
+	Code            string                  `json:"code"`
+	Message         string                  `json:"message"`
+	Details         map[string]string       `json:"details,omitempty"`
+	FieldViolations []gatewayFieldViolation `json:"field_violations,omitempty"`
+}
+
+type gatewayFieldViolation struct {
+	Field       string `json:"field"`
+	Description string `json:"description"`
 }
 
 // GatewayErrorHandler is a drop-in replacement for grpc-gateway's default
 // error handler. It extracts ErrorInfo from the gRPC status details and
 // writes a unified JSON error response that matches Minato's HTTP error shape.
-//
-// Usage in main.go:
-//
-//	server := minato.New(
-//	    minato.WithGatewayMuxOptions(
-//	        runtime.WithErrorHandler(merr.GatewayErrorHandler),
-//	    ),
-//	)
 func GatewayErrorHandler(
 	ctx context.Context,
 	mux *runtime.ServeMux,
@@ -44,14 +41,14 @@ func GatewayErrorHandler(
 	st := status.Convert(err)
 	httpStatus := runtime.HTTPStatusFromCode(st.Code())
 
-	// Default values — used when no ErrorInfo detail is attached
 	errCode := st.Code().String()
 	errMessage := st.Message()
 	var details map[string]string
+	var fieldViolations []gatewayFieldViolation
 
-	// Extract ErrorInfo from the status details if present
 	for _, d := range st.Details() {
-		if info, ok := d.(*errdetails.ErrorInfo); ok {
+		switch info := d.(type) {
+		case *errdetails.ErrorInfo:
 			if info.Reason != "" {
 				errCode = info.Reason
 			}
@@ -64,15 +61,23 @@ func GatewayErrorHandler(
 					details[k] = v
 				}
 			}
-			break // only use the first ErrorInfo
+
+		case *errdetails.BadRequest:
+			for _, fv := range info.FieldViolations {
+				fieldViolations = append(fieldViolations, gatewayFieldViolation{
+					Field:       fv.Field,
+					Description: fv.Description,
+				})
+			}
 		}
 	}
 
 	body := gatewayErrorBody{
 		Error: gatewayErrorDetail{
-			Code:    errCode,
-			Message: errMessage,
-			Details: details,
+			Code:            errCode,
+			Message:         errMessage,
+			Details:         details,
+			FieldViolations: fieldViolations,
 		},
 	}
 

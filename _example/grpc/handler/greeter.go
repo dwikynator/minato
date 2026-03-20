@@ -16,15 +16,13 @@ func NewGreeterHandler() *GreeterHandler {
 }
 
 func (h *GreeterHandler) SayHello(ctx context.Context, req *greeterpb.HelloRequest) (*greeterpb.HelloResponse, error) {
-	// Demonstrate error handling — empty name triggers a validation error
 	if req.Name == "" {
-		return nil, merr.BadRequest(
-			"INVALID_NAME",
-			"name must not be empty",
-			merr.WithDomain("greeter"),
+		return nil, merr.NewValidationError(
+			"VALIDATION_FAILED",
+			"request validation failed",
+			merr.FieldViolation{Field: "name", Description: "must not be empty"},
 		)
 	}
-
 	return &greeterpb.HelloResponse{
 		Message: "Hello " + req.Name,
 	}, nil
