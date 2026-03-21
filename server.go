@@ -76,15 +76,7 @@ func (s *Server) Router() *Router {
 func (s *Server) runHTTP() error {
 	s.httpSrv.Handler = s.router
 
-	if s.config.healthCheck {
-		// Convert slice of named checks into a map for the readiness handler
-		checks := make(map[string]health.CheckFunc)
-		for _, nc := range s.config.readinessChecks {
-			checks[nc.name] = nc.fn
-		}
-		s.router.Get("/healthz", health.Liveness())
-		s.router.Get("/readyz", health.Readiness(checks))
-	}
+	s.registerInfraRoutes()
 
 	if s.config.metrics {
 		// promphttp.Handler() returns a standard http.Handler that
@@ -185,7 +177,10 @@ func (s *Server) runGRPCMode() error {
 		}
 	}
 
-	// 4. Mount gateway mux so HTTP middleware chain applies to it.
+	// 4. Register infra routes BEFORE mounting the gateway catch-all.
+	s.registerInfraRoutes()
+
+	// 5. Mount gateway mux so HTTP middleware chain applies to it.
 	s.router.Mount("/", gwMux)
 	s.httpSrv.Handler = s.router
 
@@ -236,4 +231,21 @@ func (s *Server) runGRPCMode() error {
 
 	return nil
 
+}
+
+// registerInfraRoutes registers health, readiness, and metrics endpoints
+// on the router. Called by both runHTTP and runGRPCMode.
+func (s *Server) registerInfraRoutes() {
+	if s.config.healthCheck {
+		checks := make(map[string]health.CheckFunc)
+		for _, nc := range s.config.readinessChecks {
+			checks[nc.name] = nc.fn
+		}
+		s.router.Get("/healthz", health.Liveness())
+		s.router.Get("/readyz", health.Readiness(checks))
+	}
+
+	if s.config.metrics {
+		s.router.Get("/metrics", promhttp.Handler().ServeHTTP)
+	}
 }

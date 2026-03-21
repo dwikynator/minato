@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/dwikynator/minato"
@@ -17,6 +18,10 @@ func main() {
 		minato.WithGRPCAddr(":9090"),
 		minato.WithGRPCReflection(),
 		minato.WithGatewayMuxOptions(merr.WithGatewayErrorHandler()),
+		minato.WithHealthCheck(),
+		minato.WithReadinessCheck("test-dep", func(ctx context.Context) error {
+			return nil
+		}),
 	)
 
 	// IMPORTANT: RecoveryPlugin MUST be registered first via UsePlugin.
@@ -34,6 +39,7 @@ func main() {
 	server.RegisterGRPC(func(s grpc.ServiceRegistrar) {
 		greeterpb.RegisterGreeterServiceServer(s, handler.NewGreeterHandler())
 	})
+
 	server.RegisterGateway(greeterpb.RegisterGreeterServiceHandlerFromEndpoint)
 	if err := server.Run(); err != nil {
 		log.Fatal(err)
