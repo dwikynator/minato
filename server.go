@@ -78,12 +78,6 @@ func (s *Server) runHTTP() error {
 
 	s.registerInfraRoutes()
 
-	if s.config.metrics {
-		// promphttp.Handler() returns a standard http.Handler that
-		// exposes Go runtime metrics and any custom metrics registered
-		s.router.Get("/metrics", promhttp.Handler().ServeHTTP)
-	}
-
 	s.config.logger.Info("minato:server starting", "addr", s.config.addr)
 
 	serverErr := make(chan error, 1)
@@ -184,7 +178,7 @@ func (s *Server) runGRPCMode() error {
 	s.router.Mount("/", gwMux)
 	s.httpSrv.Handler = s.router
 
-	// 5. Start both servers concurrently
+	// 6. Start both servers concurrently
 	serverErr := make(chan error, 1)
 
 	go func() {
@@ -206,14 +200,14 @@ func (s *Server) runGRPCMode() error {
 		}
 	}()
 
-	// 6. Block until signal or fatal error
+	// 7. Block until signal or fatal error
 	select {
 	case err := <-serverErr:
 		return err
 	case <-ctx.Done():
 	}
 
-	// 7. Graceful shutdown - HTTP first, then gRPC , then closers
+	// 8. Graceful shutdown - HTTP first, then gRPC , then closers
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), s.config.shutdownTimeout)
 	defer cancel()
 
