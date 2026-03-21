@@ -3,6 +3,7 @@ package minato
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	runtime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -65,5 +66,56 @@ func TestUsePlugin(t *testing.T) {
 	// Verify it was added to the gRPC interceptors
 	if len(s.config.grpcUnaryInts) != 1 {
 		t.Errorf("expected 1 grpc unary interceptor, got %d", len(s.config.grpcUnaryInts))
+	}
+}
+
+func TestGRPCMode_HealthCheckRegistered(t *testing.T) {
+	s := New(WithGRPCAddr(":0"), WithHealthCheck())
+
+	// registerInfraRoutes should have been set up to be called.
+	// We can verify by checking the router handles /healthz.
+	s.registerInfraRoutes()
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	s.router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 for /healthz, got %d", rec.Code)
+	}
+}
+
+func TestGRPCMode_ReadinessCheckRegistered(t *testing.T) {
+	s := New(
+		WithGRPCAddr(":0"),
+		WithHealthCheck(),
+		WithReadinessCheck("test-dep", func(ctx context.Context) error {
+			return nil
+		}),
+	)
+
+	s.registerInfraRoutes()
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
+	s.router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 for /readyz, got %d", rec.Code)
+	}
+}
+
+func TestGRPCMode_HealthCheckDisabledByDefault(t *testing.T) {
+	s := New(WithGRPCAddr(":0"))
+
+	s.registerInfraRoutes()
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	s.router.ServeHTTP(rec, req)
+
+	// Should NOT be 200 — healthCheck is disabled by default
+	if rec.Code == http.StatusOK {
+		t.Error("/healthz should not be registered when WithHealthCheck is not set")
 	}
 }
