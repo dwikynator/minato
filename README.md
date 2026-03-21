@@ -10,7 +10,9 @@ Minato is an opinionated, feature-rich Go server framework for building producti
 - **Health Checks**: Automatic `/healthz` (liveness) and `/readyz` (readiness) endpoints with concurrent dependency checking.
 - **Security**: Highly configurable CORS middleware.
 - **Routing**: Clean, `chi`-backed routing with sub-router groups.
-- **gRPC Mode (Optional)**: Run gRPC (`:9090`) and HTTP/JSON gateway (`:8080`) in one process via `grpc-gateway`.
+- **Generic Handlers**: Type-safe HTTP handlers using Go generics (`GenericHandler[TReq, TRes]`) with auto-binding and validation.
+- **gRPC Mode (Optional)**: Run gRPC (e.g. `:9090`) and HTTP/JSON gateway (e.g. `:8080`) in one process via `grpc-gateway`.
+- **gRPC Error Ergonomics**: Built-in `merr` package for HTTP-semantic gRPC errors (`merr.NotFound`, `merr.BadRequest`) and unified gateway JSON responses.
 - **Cross-Transport Middleware Plugins**: Apply the same concern to HTTP middleware and gRPC interceptors with `UsePlugin(...)`.
 
 ## Installation
@@ -92,6 +94,7 @@ import (
 	"github.com/dwikynator/minato"
 	greeterpb "github.com/dwikynator/minato/_example/grpc/grpc/greeter/v1"
 	"github.com/dwikynator/minato/_example/grpc/handler"
+	"github.com/dwikynator/minato/merr"
 	"github.com/dwikynator/minato/middleware"
 	"google.golang.org/grpc"
 )
@@ -101,6 +104,7 @@ func main() {
 		minato.WithAddr(":8080"),     // HTTP gateway
 		minato.WithGRPCAddr(":9090"), // gRPC server
 		minato.WithGRPCReflection(),  // optional; useful for grpcurl/dev tooling
+		minato.WithGatewayMuxOptions(merr.WithGatewayErrorHandler()), // unified JSON errors
 	)
 
 	// IMPORTANT: RecoveryPlugin MUST be registered first via UsePlugin.
