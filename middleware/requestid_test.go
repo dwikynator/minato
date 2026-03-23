@@ -29,6 +29,11 @@ func TestRequestID(t *testing.T) {
 		if ctxID != resID {
 			t.Errorf("Expected context ID %q to match response header ID %q", ctxID, resID)
 		}
+
+		grpcMeta := req.Header.Get("Grpc-Metadata-X-Request-Id")
+		if grpcMeta != resID {
+			t.Errorf("Expected Grpc-Metadata-X-Request-Id header to be %q, got %q", resID, grpcMeta)
+		}
 	})
 
 	t.Run("uses existing ID if provided", func(t *testing.T) {
@@ -46,6 +51,11 @@ func TestRequestID(t *testing.T) {
 		ctxID := rec.Body.String()
 		if ctxID != existingID {
 			t.Errorf("Expected context ID to be %q, got %q", existingID, ctxID)
+		}
+
+		grpcMeta := req.Header.Get("Grpc-Metadata-X-Request-Id")
+		if grpcMeta != existingID {
+			t.Errorf("Expected Grpc-Metadata-X-Request-Id header to be %q, got %q", existingID, grpcMeta)
 		}
 	})
 }

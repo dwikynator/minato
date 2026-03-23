@@ -13,6 +13,7 @@ Minato is an opinionated, feature-rich Go server framework for building producti
 - **Generic Handlers**: Type-safe HTTP handlers using Go generics (`GenericHandler[TReq, TRes]`) with auto-binding and validation.
 - **gRPC Mode (Optional)**: Run gRPC (e.g. `:9090`) and HTTP/JSON gateway (e.g. `:8080`) in one process via `grpc-gateway`.
 - **gRPC Error Ergonomics**: Built-in `merr` package for HTTP-semantic gRPC errors (`merr.NotFound`, `merr.BadRequest`) and unified gateway JSON responses.
+- **Pluggable Authentication**: Built-in dual-protocol Auth middleware that seamlessly extracts tokens from HTTP headers and gRPC metadata into a unified validator closure.
 - **Cross-Transport Middleware Plugins**: Apply the same concern to HTTP middleware and gRPC interceptors with `UsePlugin(...)`.
 
 ## Installation
@@ -118,6 +119,16 @@ func main() {
 	)
 	server.Use(middleware.CORS()) // HTTP-only middleware
 
+	// Auth interceptor protects both direct gRPC and HTTP gateway requests 
+	// (the gateway automatically forwards the Authorization HTTP header to metadata)
+	server.UseGRPC(middleware.AuthInterceptor(
+		middleware.WithAuthSkipPaths("/greeter.v1.GreeterService/SayHello"),
+		middleware.WithAuthValidator(func(ctx context.Context, token string) (context.Context, error) {
+			// Inject your token verification logic here (e.g., JWT parse, Redis check)
+			return ctx, nil
+		}),
+	))
+
 	server.RegisterGRPC(func(s grpc.ServiceRegistrar) {
 		greeterpb.RegisterGreeterServiceServer(s, handler.NewGreeterHandler())
 	})
@@ -216,6 +227,13 @@ Notes:
 - Minato bare tracks baseline closely in this in-process benchmark.
 - Stacked mode is intentionally higher overhead due to middleware features.
 - Treat these numbers as machine-specific; rerun the script for your environment.
+
+## Documentation
+
+Detailed architectural deep-dives and implementation guides are available in the project repository:
+- [Middleware Placement Guide](docs/MIDDLEWARE_GUIDE.md): When to use `Use`, `UseGRPC`, or `UsePlugin`.
+- [Pluggable Auth Plugin](_docs/AUTH_PLUGIN.md): Deep-dive into building and wiring high-performance auth.
+- [Custom Plugins](_docs/custom_plugins.md): How to author your own dual-protocol plugins.
 
 ## License
 

@@ -25,6 +25,8 @@ func RequestID() func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), requestIDKey, id)
 
+			r.Header.Set("Grpc-Metadata-X-Request-Id", id)
+
 			r = r.WithContext(ctx)
 			w.Header().Set("X-Request-ID", id)
 			next.ServeHTTP(w, r)
