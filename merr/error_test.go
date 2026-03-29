@@ -119,14 +119,67 @@ func TestError_GRPCStatusRoundTrip(t *testing.T) {
 }
 
 func TestError_Is(t *testing.T) {
-	err1 := &merr.Error{Code: codes.NotFound, Message: "a"}
-	err2 := &merr.Error{Code: codes.NotFound, Message: "b"}
-	err3 := &merr.Error{Code: codes.Internal, Message: "c"}
+	// Sentinel definitions that mirror real usage.
+	errUserNotFound := &merr.Error{Code: codes.NotFound, Reason: "USER_NOT_FOUND", Domain: "user"}
+	errSessionNotFound := &merr.Error{Code: codes.NotFound, Reason: "SESSION_NOT_FOUND", Domain: "session"}
+	errInternal := &merr.Error{Code: codes.Internal, Reason: "INTERNAL", Domain: "user"}
 
-	if !errors.Is(err1, err2) {
-		t.Error("expected err1 Is err2 (same code)")
+	tests := []struct {
+		name   string
+		err    error
+		target error
+		want   bool
+	}{
+		{
+			name:   "identical sentinels match",
+			err:    &merr.Error{Code: codes.NotFound, Reason: "USER_NOT_FOUND", Domain: "user"},
+			target: errUserNotFound,
+			want:   true,
+		},
+		{
+			name:   "same code different reason must NOT match",
+			err:    errUserNotFound,
+			target: errSessionNotFound,
+			want:   false,
+		},
+		{
+			name:   "same code same reason different domain must NOT match",
+			err:    &merr.Error{Code: codes.NotFound, Reason: "USER_NOT_FOUND", Domain: "admin"},
+			target: errUserNotFound,
+			want:   false,
+		},
+		{
+			name:   "different code must NOT match",
+			err:    errInternal,
+			target: errUserNotFound,
+			want:   false,
+		},
+		{
+			name:   "message difference is ignored",
+			err:    &merr.Error{Code: codes.NotFound, Reason: "USER_NOT_FOUND", Domain: "user", Message: "ignored"},
+			target: errUserNotFound,
+			want:   true,
+		},
+		{
+			name:   "metadata difference is ignored",
+			err:    &merr.Error{Code: codes.NotFound, Reason: "USER_NOT_FOUND", Domain: "user", Metadata: map[string]string{"k": "v"}},
+			target: errUserNotFound,
+			want:   true,
+		},
+		{
+			name:   "non-merr target returns false",
+			err:    errUserNotFound,
+			target: errors.New("plain error"),
+			want:   false,
+		},
 	}
-	if errors.Is(err1, err3) {
-		t.Error("expected err1 NOT Is err3 (different code)")
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := errors.Is(tc.err, tc.target)
+			if got != tc.want {
+				t.Errorf("errors.Is(%v, %v) = %v, want %v", tc.err, tc.target, got, tc.want)
+			}
+		})
 	}
 }
