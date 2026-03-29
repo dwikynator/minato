@@ -68,10 +68,18 @@ func (e *Error) GRPCStatus() *status.Status {
 	return stWithDetails
 }
 
-// Is allows errors.Is matching byb code: errors.Is(err, merr.ErrNotFound)
+// Is allows errors.Is matching by code, reason, and domain:
+//
+//	errors.Is(err, merr.ErrUserNotFound)
+//
+// All three fields must match so that errors sharing the same gRPC code but
+// different reasons (e.g. USER_NOT_FOUND vs SESSION_NOT_FOUND) are correctly
+// treated as distinct sentinels.
+// Message and Metadata are intentionally excluded: Message is human-readable
+// and may vary per call-site; Metadata carries runtime context.
 func (e *Error) Is(target error) bool {
 	if t, ok := target.(*Error); ok {
-		return e.Code == t.Code
+		return e.Code == t.Code && e.Reason == t.Reason && e.Domain == t.Domain
 	}
 	return false
 }
