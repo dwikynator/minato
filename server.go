@@ -145,11 +145,17 @@ func (s *Server) runGRPCMode() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// 1. Build the gRPC server with interceptors
-	grpcSrv := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(s.config.grpcUnaryInts...),
-		grpc.ChainStreamInterceptor(s.config.grpcStreamInts...),
-	)
+	// 1. Build the gRPC server with interceptors and custom ServerOptions
+	var serverOpts []grpc.ServerOption
+	if len(s.config.grpcUnaryInts) > 0 {
+		serverOpts = append(serverOpts, grpc.ChainUnaryInterceptor(s.config.grpcUnaryInts...))
+	}
+	if len(s.config.grpcStreamInts) > 0 {
+		serverOpts = append(serverOpts, grpc.ChainStreamInterceptor(s.config.grpcStreamInts...))
+	}
+	serverOpts = append(serverOpts, s.config.grpcServerOpts...)
+
+	grpcSrv := grpc.NewServer(serverOpts...)
 
 	// 2. Register gRPC service implementation
 	for _, fn := range s.config.grpcServices {
