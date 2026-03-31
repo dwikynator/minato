@@ -23,6 +23,7 @@ type config struct {
 	// gRPC mode - zero values mean gRPC mode is disabled.
 	grpcAddr       string
 	grpcServices   []GRPCServiceFunc
+	grpcServerOpts []grpc.ServerOption
 	grpcUnaryInts  []grpc.UnaryServerInterceptor
 	grpcStreamInts []grpc.StreamServerInterceptor
 	gatewayRegFns  []GatewayRegisterFunc
@@ -152,9 +153,18 @@ func WithGRPCAddr(addr string) Option {
 }
 
 // WithGRPCUnaryInterceptor appends one or more unary interceptors to the gRPC server.
+// Deprecated: prefer using WithGRPCServerOption with grpc.ChainUnaryInterceptor instead.
 func WithGRPCUnaryInterceptor(interceptors ...grpc.UnaryServerInterceptor) Option {
 	return func(c *config) {
 		c.grpcUnaryInts = append(c.grpcUnaryInts, interceptors...)
+	}
+}
+
+// WithGRPCServerOption appends one or more arbitrary gRPC ServerOptions.
+// Useful for adding StatsHandlers or custom interceptor chains.
+func WithGRPCServerOption(opts ...grpc.ServerOption) Option {
+	return func(c *config) {
+		c.grpcServerOpts = append(c.grpcServerOpts, opts...)
 	}
 }
 
